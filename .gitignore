@@ -1,0 +1,7 @@
+/compression/**/*.hkl
+/compression/**/*.mat
+
+*.caffemodel
+*.npy
+*.JPEG
+*.pyc
