@@ -11,6 +11,7 @@ feature_layers = ['fc7', 'fc6', 'pool5', 'conv4', 'conv3', 'pool2', 'pool1']
 feature_dir = "../features"
 compression_dir = "../compression"
 distances_dir = "../distances"
+db_dir = "../db"
 caffe_root = '/home/eric/caffe/caffe-master/'
 
 
@@ -19,6 +20,8 @@ user = 'postgres'
 password = 'asdfgh'
 host = '127.0.0.1'
 dbname = 'mydb'
+
+import cv2
 
 def get_dimension_options(layer, compression):
     """
@@ -68,49 +71,20 @@ def load_english_labels():
 
     return labels
 
-
-def load_test_class_labels():
-    """
-    Return all the class labels for the test set. Note that we are using the validation images as the test set
-    since they come with labels
-
-    :return: labels
-    """
-    fo = open("../caffe/val.txt", "r+")
+def load_db_labels():
+    fo = open("../db/labels.txt", "r+")
 
     # remove the /n
     content = fo.read().splitlines()
-
     labels = {}
 
     for line in content:
-        image, klass = line.split(' ')
-        labels[image] = int(klass)
+        klass, label = line.split(' ')
+        labels[int(klass)] = label
 
     fo.close()
-
     return labels
 
-def load_train_class_labels():
-    """
-    Return all the class labels for the training set.
-
-    :return: labels
-    """
-    fo = open("../caffe/train_without_dir.txt", "r+")
-
-    # remove the /n
-    content = fo.read().splitlines()
-
-    labels = {}
-
-    for line in content:
-        image, klass = line.split(' ')
-        labels[image] = int(klass)
-
-    fo.close()
-
-    return labels
 
 def load_compressor(layer, dimension, compression):
     """
@@ -224,3 +198,67 @@ def load_distance_matrix(layer):
     :return: numpy array
     """
     return hkl.load(os.path.join(distances_dir, 'dist_matrix_' + layer + '.hkl'))
+
+def dump_feature_db(comp_fc7, ids, fc7_feats, pool5_feats):
+    """
+    Saves out the feature layer using hickle
+
+    :return:
+    """
+
+    file_name = 'fc7_feats.hkl'
+    file_path = os.path.join(db_dir, 'feats', file_name)
+    print 'Saving : ', file_path
+    hkl.dump(fc7_feats, file_path, mode='w', compression='gzip')
+
+    file_name = 'ids.hkl'
+    file_path = os.path.join(db_dir, 'feats', file_name)
+    print 'Saving : ', file_path
+    hkl.dump(ids, file_path, mode='w', compression='gzip')
+
+
+    file_name = 'comp_fc7.hkl'
+    file_path = os.path.join(db_dir, 'feats', file_name)
+    print 'Saving : ', file_path
+    hkl.dump(comp_fc7, file_path, mode='w', compression='gzip')
+
+
+    file_name = 'pool5_feats.hkl'
+    file_path = os.path.join(db_dir, 'feats', file_name)
+    print 'Saving : ', file_path
+    hkl.dump(pool5_feats, file_path, mode='w', compression='gzip')
+
+    print 'Saved %s Images into Databse' % ids.shape[0]
+
+def load_feature_db():
+    """
+
+    :return: comp_fc7, ids, fc7_feats, pool5_feats
+    """
+
+    features_path = os.path.join(db_dir, 'feats')
+    files = os.listdir(features_path)
+    N = len(files)
+
+    if N <= 1:
+        print 'No stored features in Database!'
+        return (np.empty((0,256), dtype=np.float32),
+               np.empty(shape=(0,1), dtype=np.int32),
+               np.empty((0,4096), dtype=np.float32),
+                np.empty((0,9216), dtype=np.float32))
+
+    start_time = time.clock()
+
+    fc7_feats = hkl.load(os.path.join(features_path, 'fc7_feats.hkl'))
+    pool5_feats = hkl.load(os.path.join(features_path, 'pool5_feats.hkl'))
+    ids = hkl.load(os.path.join(features_path, 'ids.hkl'))
+    comp_fc7 = hkl.load(os.path.join(features_path, 'comp_fc7.hkl'))
+
+    print 'Load Time Feat DB (s) : ', time.clock() - start_time
+    print '%s Instances in DB' % ids.shape[0]
+
+    return comp_fc7, ids, fc7_feats, pool5_feats
+
+def save_image(np_img, inst, type):
+    file_path = os.path.join(db_dir,type, 'img_%s.jpeg' % (inst))
+    cv2.imwrite(file_path, np_img)

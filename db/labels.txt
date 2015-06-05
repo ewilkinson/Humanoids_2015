@@ -1,0 +1,4 @@
+0 recyle_bin
+1 pitcher
+2 pringles_can
+3 toolbox
