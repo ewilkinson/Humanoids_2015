@@ -20,8 +20,8 @@ def trans_img_dcnn(img, box):
     """
     x1, y1, x2, y2, mean_depth = box
 
-    mean_x = x2 -x1 / 2.0
-    mean_y = y2 - y1 / 2.0
+    mean_x = (x2 + x1) / 2.0
+    mean_y = (y2 + y1) / 2.0
 
     # its okay to have negatives since these  should wrap around to 0's
     x_min = mean_x - 200

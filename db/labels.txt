@@ -1,4 +1,10 @@
 0 recyle_bin
 1 pitcher
 2 pringles_can
-3 toolbox
+3 ar_cube
+4 ubot5
+5 vacuum
+6 toolbox
+7 chair
+8 shopvac
+9 7up_soda

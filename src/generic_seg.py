@@ -46,7 +46,7 @@ class GenericSegmenter:
         self.depth_count = 0
 
         self.depth_max_threshold = depth_max_threshold
-        self.box_merge_threshold = 0.3
+        self.box_merge_threshold = 0.1
 
         self.depth_mask = None
         self.depth_img = None
