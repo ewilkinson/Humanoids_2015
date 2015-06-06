@@ -49,15 +49,20 @@ def plot_embedding(X, title=None):
         plt.title(title)
 
 
-n_neighbors = 5
-# model = TSNE(n_components=2, perplexity=5, random_state=0)
-# model = manifold.LocallyLinearEmbedding(5, n_components=2,
-#                                       method='standard')
-# model = manifold.Isomap(n_neighbors, n_components=2)
-# embed_X = model.fit_transform(comp_fc7)
+n_neighbors = 6
 
-model = lda.LDA(n_components=2)
-embed_X = model.fit_transform(comp_fc7, ids)
+# model = manifold.TSNE(n_components=2, perplexity=10, random_state=0)
+# model = manifold.LocallyLinearEmbedding(n_neighbors, n_components=2, method='standard')
+
+# model = manifold.Isomap(n_neighbors, n_components=2)
+
+model = manifold.SpectralEmbedding(n_components=2, random_state=0,
+                                      eigen_solver="arpack")
+
+embed_X = model.fit_transform(comp_fc7)
+
+# model = lda.LDA(n_components=2)
+# embed_X = model.fit_transform(comp_fc7, ids)
 
 
 

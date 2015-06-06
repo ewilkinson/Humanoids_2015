@@ -254,6 +254,11 @@ def load_feature_db():
     ids = hkl.load(os.path.join(features_path, 'ids.hkl'))
     comp_fc7 = hkl.load(os.path.join(features_path, 'comp_fc7.hkl'))
 
+    # for now, normalize the pool5_feats making comparison easier
+    # still want to hold on to original pool5_feats though
+    for i, feat in enumerate(pool5_feats):
+        pool5_feats[i,:] = feat / feat.max()
+
     print 'Load Time Feat DB (s) : ', time.clock() - start_time
     print '%s Instances in DB' % ids.shape[0]
 
@@ -262,3 +267,110 @@ def load_feature_db():
 def save_image(np_img, inst, type):
     file_path = os.path.join(db_dir,type, 'img_%s.jpeg' % (inst))
     cv2.imwrite(file_path, np_img)
+
+def load_image(inst, type):
+    file_path = os.path.join(db_dir,type, 'img_%s.jpeg' % (inst))
+    return cv2.imread(file_path)
+
+
+def trans_img_dcnn(img, box):
+    """
+    Center the crop in a image size set for the dcnn (255, 255). Convert to float32 and scale 0,1
+
+    :param img: segmented image with 1 object
+    :param box: The segment box
+
+    :return: dcnn_img
+    """
+    x1, y1, x2, y2, mean_depth = box
+
+    mean_x = int((x2 + x1) / 2.0)
+    mean_y = int((y2 + y1) / 2.0 )
+
+    size = 400
+    half_size = size / 2
+
+    # its okay to have negatives since these  should wrap around to 0's
+    if mean_x + half_size >= img.shape[0]:
+        x_max = img.shape[0]-1
+        x_min = x_max - size
+    elif mean_x - half_size < 0:
+        x_min = 0
+        x_max = size
+    else:
+        x_min = mean_x - half_size
+        x_max = x_min + size
+
+    if mean_y + half_size >= img.shape[1]:
+        y_max = img.shape[1]-1
+        y_min = y_max - size
+    elif mean_y - half_size < 0:
+        y_min = 0
+        y_max = size
+    else:
+        y_min = mean_y - half_size
+        y_max = y_min + size
+
+    print x_min, x_max, y_min, y_max
+
+    resized_img = cv2.resize(img[x_min:x_max, y_min:y_max, :], (256, 256))
+
+    return np.asarray(resized_img, dtype=np.float32) / 255.0
+
+def query_accept():
+    var = raw_input("Accept Photo (y/n) ? : ")
+    if var.upper() == 'Y' or var.upper() == 'YES':
+        return 1
+    else:
+        return -1
+
+def query_class():
+    while True:
+        try:
+            var = raw_input("Enter class ID (uint) : ")
+            id = int(var)
+            break
+        except:
+            print 'Must be an integer value.'
+            continue
+
+    return id
+
+
+
+def crop_segment(segmenter):
+    """
+    Crops the image from the segmenter so that only the closest object is visible
+
+    :param segmenter:
+    :return:
+    """
+    img = segmenter.rgb_imge
+    boxes = segmenter.boxes
+
+    closest_idx = 0
+    closest_val = np.inf
+    for i in range(len(boxes)):
+        x1, y1, x2, y2, mean_depth = boxes[i]
+        if mean_depth < closest_val:
+            closest_idx = i
+            closest_val = mean_depth
+
+    x1, y1, x2, y2, mean_depth = boxes[closest_idx]
+
+    x1 = max(0, x1)
+    y1 = max(0,y1)
+    x2 = min(x2, img.shape[0]-1)
+    y2 = min(y2, img.shape[1]-1)
+
+    cropped_img = np.zeros(img.shape, dtype=img.dtype)
+    cropped_img[x1:x2, y1:y2, :] = img[x1:x2, y1:y2, :]
+
+    return  cropped_img, boxes[closest_idx]
+
+def query_should_continue():
+    should_continue = raw_input("Continue (y/n) ? : ")
+    if should_continue.lower() == 'n' or should_continue.lower() == 'no':
+        return -1
+
+    return 1

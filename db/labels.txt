@@ -1,10 +1,10 @@
 0 recyle_bin
 1 pitcher
-2 pringles_can
+2 trash_bin
 3 ar_cube
 4 ubot5
-5 vacuum
+5 detergent
 6 toolbox
 7 chair
 8 shopvac
-9 7up_soda
+9 cheezits

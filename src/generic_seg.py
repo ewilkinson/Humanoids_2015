@@ -285,6 +285,9 @@ class GenericSegmenter:
             mask *= 255
             cv2.imshow("Mask window", mask)
             cv2.waitKey(1)
+        #
+        # for j in range(cv_image.shape[2]):
+        #     cv_image[:,:,j] = cv_image[:,:,j] * self.depth_mask
 
         if self.show_segmentation:
             cv2.imshow("Image window", cv_image)
@@ -308,7 +311,7 @@ if __name__ == '__main__':
                             depth_max_threshold=4000,
                             show_segmentation=True,
                             show_cluster=True,
-                            show_mask=False,
+                            show_mask=True,
                             merge_boxes=True)
 
     try:
