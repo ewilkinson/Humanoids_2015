@@ -8,3 +8,8 @@
 7 chair
 8 shopvac
 9 cheezits
+10 backpack
+11 tolder_toy
+12 legos
+13 chair_blue
+14 green_ball

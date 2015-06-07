@@ -16,6 +16,7 @@ from sklearn.preprocessing import StandardScaler
 
 import time
 
+from scipy import ndimage
 
 class GenericSegmenter:
     def __init__(self, cluster_type="dbscan", use_gray=True, depth_max_threshold=4000, show_segmentation=False, show_cluster=False, show_mask=False, merge_boxes=False):
@@ -168,6 +169,7 @@ class GenericSegmenter:
         except CvBridgeError, e:
             print e
 
+        cv_image = ndimage.median_filter(cv_image, 3)
         depth_threshold = threshold_otsu(cv_image)
 
         if depth_threshold > self.depth_max_threshold:

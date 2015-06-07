@@ -282,38 +282,49 @@ def trans_img_dcnn(img, box):
 
     :return: dcnn_img
     """
+    # x1, y1, x2, y2, mean_depth = box
+    #
+    # mean_x = int((x2 + x1) / 2.0)
+    # mean_y = int((y2 + y1) / 2.0 )
+    #
+    # size = 400
+    # half_size = size / 2
+    #
+    # # its okay to have negatives since these  should wrap around to 0's
+    # if mean_x + half_size >= img.shape[0]:
+    #     x_max = img.shape[0]-1
+    #     x_min = x_max - size
+    # elif mean_x - half_size < 0:
+    #     x_min = 0
+    #     x_max = size
+    # else:
+    #     x_min = mean_x - half_size
+    #     x_max = x_min + size
+    #
+    # if mean_y + half_size >= img.shape[1]:
+    #     y_max = img.shape[1]-1
+    #     y_min = y_max - size
+    # elif mean_y - half_size < 0:
+    #     y_min = 0
+    #     y_max = size
+    # else:
+    #     y_min = mean_y - half_size
+    #     y_max = y_min + size
+    #
+    # print x_min, x_max, y_min, y_max
+    #
+    # resized_img = cv2.resize(img[x_min:x_max, y_min:y_max, :], (256, 256))
+    #
+    # return np.asarray(resized_img, dtype=np.float32) / 255.0
+
     x1, y1, x2, y2, mean_depth = box
 
-    mean_x = int((x2 + x1) / 2.0)
-    mean_y = int((y2 + y1) / 2.0 )
+    x1 = max(0, x1)
+    y1 = max(0, y1)
+    x2 = min(img.shape[0]-1, x2)
+    y2 = min(img.shape[1] -1, y2)
 
-    size = 400
-    half_size = size / 2
-
-    # its okay to have negatives since these  should wrap around to 0's
-    if mean_x + half_size >= img.shape[0]:
-        x_max = img.shape[0]-1
-        x_min = x_max - size
-    elif mean_x - half_size < 0:
-        x_min = 0
-        x_max = size
-    else:
-        x_min = mean_x - half_size
-        x_max = x_min + size
-
-    if mean_y + half_size >= img.shape[1]:
-        y_max = img.shape[1]-1
-        y_min = y_max - size
-    elif mean_y - half_size < 0:
-        y_min = 0
-        y_max = size
-    else:
-        y_min = mean_y - half_size
-        y_max = y_min + size
-
-    print x_min, x_max, y_min, y_max
-
-    resized_img = cv2.resize(img[x_min:x_max, y_min:y_max, :], (256, 256))
+    resized_img = cv2.resize(img[x1:x2, y1:y2, :], (256, 256))
 
     return np.asarray(resized_img, dtype=np.float32) / 255.0
 
