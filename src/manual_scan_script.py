@@ -31,7 +31,7 @@ if __name__ == '__main__':
                             show_mask=False,
                             merge_boxes=True)
 
-    comp_fc7, ids, fc7_feats, pool5_feats = utils.load_feature_db()
+    comp_fc7, class_labels, fc7_feats, pool5_feats = utils.load_feature_db()
 
     try:
         segmenter.listen()
@@ -69,16 +69,16 @@ if __name__ == '__main__':
             pool5_feats = np.vstack((pool5_feats, pool5))
 
             # assign a unique ID and save image
-            unique_id = ids.shape[0]
+            unique_id = class_labels.shape[0]
 
             # append the id list with the latest class id
-            ids = np.append(ids, class_id)
+            class_labels = np.append(class_labels, class_id)
 
             # we have to dump each time otherwise images and indicies might get out of sync
             # say, if the program terminated but had already saved out images
             utils.save_image(segmenter.rgb_imge, unique_id, 'images')
             utils.save_image(dcnn_img*255, unique_id, 'seg_images')
-            utils.dump_feature_db(comp_fc7, ids, fc7_feats, pool5_feats)
+            utils.dump_feature_db(comp_fc7, class_labels, fc7_feats, pool5_feats)
 
             time.sleep(1)
 

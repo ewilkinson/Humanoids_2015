@@ -3,6 +3,7 @@ import numpy as np
 import os
 import time
 import hickle as hkl
+import pickle
 
 
 use_alexnet = True
@@ -264,6 +265,26 @@ def load_feature_db():
 
     return comp_fc7, ids, fc7_feats, pool5_feats
 
+def dump_feature_stats(class_gmms):
+    file_name = 'class_gmms.p'
+    file_path = os.path.join(db_dir, 'stats', file_name)
+    print 'Saving : ', file_path
+    pickle.dump(class_gmms, open( file_path, "wb" ))
+
+def load_feature_stats():
+    """
+
+    :return: class_gmms
+    """
+    start_time = time.clock()
+    file_path = os.path.join(db_dir, 'stats', 'class_gmms.p')
+    class_gmms = pickle.load(open(file_path, "rb" ))
+
+
+    print 'Load Time Stats DB (s) : ', time.clock() - start_time
+    return class_gmms
+
+
 def save_image(np_img, inst, type):
     file_path = os.path.join(db_dir,type, 'img_%s.jpeg' % (inst))
     cv2.imwrite(file_path, np_img)
@@ -385,3 +406,4 @@ def query_should_continue():
         return -1
 
     return 1
+
