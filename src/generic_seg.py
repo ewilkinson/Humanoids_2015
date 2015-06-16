@@ -186,7 +186,7 @@ class GenericSegmenter:
             return 0
 
         try:
-            cv_image = self.bridge.imgmsg_to_cv2(data, "bgr8")
+            cv_image = self.bridge.imgmsg_to_cv2(data, "rgb8")
         except CvBridgeError, e:
             print e
 

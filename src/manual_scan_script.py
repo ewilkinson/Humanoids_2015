@@ -5,7 +5,8 @@ import time, sys
 
 from generic_seg import GenericSegmenter
 import cv2
-from PIL import Image
+
+from scipy.stats import pearsonr, spearmanr
 
 import utils
 
@@ -13,8 +14,8 @@ if __name__ == '__main__':
     net, params, blobs = utils.load_network()
 
     fc7_compressor = utils.load_compressor(layer='fc7',
-                                               dimension=256,
-                                               compression='lda')
+                                               dimension=128,
+                                               compression='pca')
 
     fc7_scalar = utils.load_scalar(layer='fc7')
     pool5_scalar = utils.load_scalar(layer='pool5')
@@ -38,6 +39,7 @@ if __name__ == '__main__':
 
         class_id = utils.query_class()
         print 'Class ID : ', class_id
+        last_aspect = None
 
         while True:
             time.sleep(1)
@@ -68,6 +70,15 @@ if __name__ == '__main__':
             comp_fc7 = np.vstack((comp_fc7, comp_feat))
             pool5_feats = np.vstack((pool5_feats, pool5))
 
+            if last_aspect is not None:
+                curr_aspect = pool5_feats / pool5_feats.max()
+                rho, pval = spearmanr(last_aspect, curr_aspect)
+                if rho > 0.8:
+                    print 'Could not accept aspect, too close to last one. Rejecting with rho: ', rho
+                    continue
+
+                last_aspect = curr_aspect
+
             # assign a unique ID and save image
             unique_id = class_labels.shape[0]
 
@@ -77,7 +88,7 @@ if __name__ == '__main__':
             # we have to dump each time otherwise images and indicies might get out of sync
             # say, if the program terminated but had already saved out images
             utils.save_image(segmenter.rgb_imge, unique_id, 'images')
-            utils.save_image(dcnn_img*255, unique_id, 'seg_images')
+            utils.save_image(np.asarray(dcnn_img*255,dtype=np.uint8), unique_id, 'seg_images')
             utils.dump_feature_db(comp_fc7, class_labels, fc7_feats, pool5_feats)
 
             time.sleep(1)

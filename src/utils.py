@@ -5,6 +5,8 @@ import time
 import hickle as hkl
 import pickle
 
+from PIL import Image
+
 
 use_alexnet = True
 
@@ -243,7 +245,7 @@ def load_feature_db():
 
     if N <= 1:
         print 'No stored features in Database!'
-        return (np.empty((0,256), dtype=np.float32),
+        return (np.empty((0,128), dtype=np.float32),
                np.empty(shape=(0,1), dtype=np.int32),
                np.empty((0,4096), dtype=np.float32),
                 np.empty((0,9216), dtype=np.float32))
@@ -287,12 +289,12 @@ def load_feature_stats():
 
 def save_image(np_img, inst, type):
     file_path = os.path.join(db_dir,type, 'img_%s.jpeg' % (inst))
-    cv2.imwrite(file_path, np_img)
+    im = Image.fromarray(np_img)
+    im.save(file_path)
 
 def load_image(inst, type):
     file_path = os.path.join(db_dir,type, 'img_%s.jpeg' % (inst))
-    return cv2.imread(file_path)
-
+    return np.asarray(Image.open(file_path), dtype=np.uint8)
 
 def trans_img_dcnn(img, box):
     """
