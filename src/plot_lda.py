@@ -21,20 +21,28 @@ labels = utils.load_db_labels()
 
 #----------------------------------------------------------------------
 # Scale and visualize the embedding vectors
-def plot_embedding(X,    title=None):
+def plot_embedding(X, with_labels=True,   title=None):
     x_min, x_max = np.min(X, 0), np.max(X, 0)
     X = (X - x_min) / (x_max - x_min)
 
     plt.figure()
     ax = plt.subplot(111)
     for i in range(X.shape[0]):
-        plt.text(X[i, 0], X[i, 1], str(ids[i]),
-                 color=plt.cm.Set1(ids[i]*1.0 / len(classes)),
-                 fontdict={'weight': 'bold', 'size': 12})
+        if with_labels is None:
+            plt.scatter(X[i, 0], X[i, 1],
+                        color=plt.cm.Set1(ids[i]*1.0 / len(classes)),
+                        s = 32)
+            continue
 
-        # plt.text(X[i, 0], X[i, 1], labels[ids[i]],
-        #      color=plt.cm.Set1(ids[i]*1.0 / len(classes)),
-        #      fontdict={'weight': 'bold', 'size': 9})
+        elif not with_labels:
+            plt.text(X[i, 0], X[i, 1], str(ids[i]),
+                     color=plt.cm.Set1(ids[i]*1.0 / len(classes)),
+                     fontdict={'weight': 'bold', 'size': 30})
+
+        elif with_labels:
+            plt.text(X[i, 0], X[i, 1], labels[ids[i]],
+                 color=plt.cm.Set1(ids[i]*1.0 / len(classes)),
+                 fontdict={'weight': 'bold', 'size': 9})
 
     plt.xticks([]), plt.yticks([])
     plt.ylim([-0.1, 1.1])
@@ -61,4 +69,4 @@ embed_X = model.fit_transform(comp_fc7, ids)
 
 
 
-plot_embedding(embed_X, 'LDA Embedding')
+plot_embedding(embed_X, with_labels=None, title= '')

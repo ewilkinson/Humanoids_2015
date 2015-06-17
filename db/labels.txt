@@ -13,3 +13,8 @@
 12 legos
 13 chair_blue
 14 green_ball
+15 desktop
+16 fire_extinguisher
+17 thrower
+18 jigsaw_drill
+19 pillow

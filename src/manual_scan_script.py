@@ -72,7 +72,7 @@ if __name__ == '__main__':
 
             if last_aspect is not None:
                 curr_aspect = pool5_feats / pool5_feats.max()
-                rho, pval = spearmanr(last_aspect, curr_aspect)
+                rho, pval = pearsonr(last_aspect, curr_aspect)
                 if rho > 0.8:
                     print 'Could not accept aspect, too close to last one. Rejecting with rho: ', rho
                     continue
