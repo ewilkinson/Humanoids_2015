@@ -14,8 +14,8 @@ if __name__ == '__main__':
     net, params, blobs = utils.load_network()
 
     fc7_compressor = utils.load_compressor(layer='fc7',
-                                               dimension=128,
-                                               compression='pca')
+                                           dimension=128,
+                                           compression='pca')
 
     fc7_scalar = utils.load_scalar(layer='fc7')
     pool5_scalar = utils.load_scalar(layer='pool5')
@@ -25,12 +25,12 @@ if __name__ == '__main__':
     cv2.namedWindow("DCNN Window", 1)
 
     segmenter = GenericSegmenter(cluster_type="dbscan",
-                            use_gray=False,
-                            depth_max_threshold=4000,
-                            show_segmentation=False,
-                            show_cluster=False,
-                            show_mask=False,
-                            merge_boxes=True)
+                                 use_gray=False,
+                                 depth_max_threshold=4000,
+                                 show_segmentation=False,
+                                 show_cluster=False,
+                                 show_mask=False,
+                                 merge_boxes=True)
 
     comp_fc7, props, fc7_feats, pool5_feats = utils.load_feature_db()
 
@@ -72,7 +72,6 @@ if __name__ == '__main__':
             prop['aspect_id'] = aspect_id
             prop['rotation'] = rotation
 
-
             dcnn_img = utils.trans_img_dcnn(cropped_img, box)
             cv2.imshow("DCNN Window", dcnn_img)
             cv2.waitKey(1)
@@ -97,7 +96,7 @@ if __name__ == '__main__':
             # we have to dump each time otherwise images and indicies might get out of sync
             # say, if the program terminated but had already saved out images
             utils.save_image(segmenter.rgb_imge, unique_id, 'images')
-            utils.save_image(np.asarray(dcnn_img*255,dtype=np.uint8), unique_id, 'seg_images')
+            utils.save_image(np.asarray(dcnn_img * 255, dtype=np.uint8), unique_id, 'seg_images')
             utils.dump_feature_db(comp_fc7, props, fc7_feats, pool5_feats)
 
             time.sleep(1)

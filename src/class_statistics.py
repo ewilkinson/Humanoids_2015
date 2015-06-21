@@ -10,7 +10,7 @@ gmms = {}
 for k in unique_classes:
     class_idxes = np.where(class_labels == k)[0]
 
-    X = comp_fc7[class_idxes,:]
+    X = comp_fc7[class_idxes, :]
     # X = X + np.random.randn(X.shape[0], X.shape[1])*1e-4
     gmm = mixture.GMM(n_components=1, covariance_type='diag')
     gmm.fit(X)
@@ -21,6 +21,7 @@ for k in unique_classes:
 
 
 from divergence import gau_bh, gau_js, gau_kl, my_kl
+
 num_classes = len(unique_classes)
 divergence_matrix = np.zeros(shape=(num_classes, num_classes), dtype=np.float64)
 
@@ -28,10 +29,9 @@ for i in range(num_classes):
     pm = np.squeeze(gmms[i].means_)
     pv = np.matrix(np.squeeze(gmms[i]._get_covars()))
     for j in range(num_classes):
-
         qm = np.squeeze(gmms[j].means_)
         qv = np.matrix(np.squeeze(gmms[j]._get_covars()))
-        divergence_matrix[i,j] = np.sqrt(gau_js(pm, pv, qm, qv))
+        divergence_matrix[i, j] = np.sqrt(gau_js(pm, pv, qm, qv))
 
 import matplotlib.pyplot as plt
 import matplotlib
