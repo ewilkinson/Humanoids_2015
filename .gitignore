@@ -1,5 +1,6 @@
 /compression/**/*.hkl
 /compression/**/*.mat
+/src/.idea/*
 
 *.caffemodel
 *.npy
