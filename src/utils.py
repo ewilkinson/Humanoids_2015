@@ -15,6 +15,7 @@ feature_dir = "../features"
 compression_dir = "../compression"
 distances_dir = "../distances"
 db_dir = "../db"
+test_set_dir = '../test_set'
 caffe_root = '/home/eric/caffe/caffe-master/'
 
 
@@ -25,6 +26,7 @@ host = '127.0.0.1'
 dbname = 'mydb'
 
 import cv2
+
 
 def get_dimension_options(layer, compression):
     """
@@ -73,6 +75,7 @@ def load_english_labels():
         raise ValueError('Could not find synset_works in the correct place.')
 
     return labels
+
 
 def load_db_labels():
     fo = open("../db/labels.txt", "r+")
@@ -164,6 +167,7 @@ def load_network():
 
     return net, params, blobs
 
+
 def load_scalar(layer):
     """
     Load the feature mean / variance scalar for the input layer
@@ -190,6 +194,7 @@ def load_scalar(layer):
 
     return scalar
 
+
 def load_distance_matrix(layer):
     """
     Returns the distance matrix as defined by the features of the provided layer
@@ -202,7 +207,8 @@ def load_distance_matrix(layer):
     """
     return hkl.load(os.path.join(distances_dir, 'dist_matrix_' + layer + '.hkl'))
 
-def dump_feature_db(comp_fc7, ids, fc7_feats, pool5_feats):
+
+def dump_feature_db(comp_fc7, props, fc7_feats, pool5_feats):
     """
     Saves out the feature layer using hickle
 
@@ -214,24 +220,23 @@ def dump_feature_db(comp_fc7, ids, fc7_feats, pool5_feats):
     print 'Saving : ', file_path
     hkl.dump(fc7_feats, file_path, mode='w', compression='gzip')
 
-    file_name = 'ids.hkl'
+    file_name = 'props.p'
     file_path = os.path.join(db_dir, 'feats', file_name)
     print 'Saving : ', file_path
-    hkl.dump(ids, file_path, mode='w', compression='gzip')
-
+    pickle.dump(props, open(file_path, "wb"))
 
     file_name = 'comp_fc7.hkl'
     file_path = os.path.join(db_dir, 'feats', file_name)
     print 'Saving : ', file_path
     hkl.dump(comp_fc7, file_path, mode='w', compression='gzip')
 
-
     file_name = 'pool5_feats.hkl'
     file_path = os.path.join(db_dir, 'feats', file_name)
     print 'Saving : ', file_path
     hkl.dump(pool5_feats, file_path, mode='w', compression='gzip')
 
-    print 'Saved %s Images into Databse' % ids.shape[0]
+    print 'Saved %s Images into Databse' % len(props)
+
 
 def load_feature_db():
     """
@@ -245,33 +250,100 @@ def load_feature_db():
 
     if N <= 1:
         print 'No stored features in Database!'
-        return (np.empty((0,128), dtype=np.float32),
-               np.empty(shape=(0,1), dtype=np.int32),
-               np.empty((0,4096), dtype=np.float32),
-                np.empty((0,9216), dtype=np.float32))
+        return (np.empty((0, 128), dtype=np.float32),
+                [],
+                np.empty((0, 4096), dtype=np.float32),
+                np.empty((0, 9216), dtype=np.float32))
 
     start_time = time.clock()
 
     fc7_feats = hkl.load(os.path.join(features_path, 'fc7_feats.hkl'))
     pool5_feats = hkl.load(os.path.join(features_path, 'pool5_feats.hkl'))
-    ids = hkl.load(os.path.join(features_path, 'ids.hkl'))
+    props = pickle.load(open(os.path.join(features_path, 'props.p'), "rb"))
     comp_fc7 = hkl.load(os.path.join(features_path, 'comp_fc7.hkl'))
 
     # for now, normalize the pool5_feats making comparison easier
     # still want to hold on to original pool5_feats though
     for i, feat in enumerate(pool5_feats):
-        pool5_feats[i,:] = feat / feat.max()
+        pool5_feats[i, :] = feat / feat.max()
 
     print 'Load Time Feat DB (s) : ', time.clock() - start_time
-    print '%s Instances in DB' % ids.shape[0]
+    print '%s Instances in DB' % len(props)
 
-    return comp_fc7, ids, fc7_feats, pool5_feats
+    return comp_fc7, props, fc7_feats, pool5_feats
+
+
+def dump_test_set_db(comp_fc7, props, fc7_feats, pool5_feats):
+    """
+    Saves out the feature layer using hickle
+
+    :return:
+    """
+
+    file_name = 'test_fc7_feats.hkl'
+    file_path = os.path.join(test_set_dir, 'feats', file_name)
+    print 'Saving : ', file_path
+    hkl.dump(fc7_feats, file_path, mode='w', compression='gzip')
+
+    file_name = 'test_props.p'
+    file_path = os.path.join(test_set_dir, 'feats', file_name)
+    print 'Saving : ', file_path
+    pickle.dump(props, open(file_path, "wb"))
+
+    file_name = 'test_comp_fc7.hkl'
+    file_path = os.path.join(test_set_dir, 'feats', file_name)
+    print 'Saving : ', file_path
+    hkl.dump(comp_fc7, file_path, mode='w', compression='gzip')
+
+    file_name = 'test_pool5_feats.hkl'
+    file_path = os.path.join(test_set_dir, 'feats', file_name)
+    print 'Saving : ', file_path
+    hkl.dump(pool5_feats, file_path, mode='w', compression='gzip')
+
+    print 'Saved %s Images into Databse' % len(props)
+
+
+def load_test_set_db():
+    """
+
+    :return: comp_fc7, ids, fc7_feats, pool5_feats
+    """
+
+    features_path = os.path.join(test_set_dir, 'feats')
+    files = os.listdir(features_path)
+    N = len(files)
+
+    if N <= 1:
+        print 'No stored features in Database!'
+        return (np.empty((0, 128), dtype=np.float32),
+                [],
+                np.empty((0, 4096), dtype=np.float32),
+                np.empty((0, 9216), dtype=np.float32))
+
+    start_time = time.clock()
+
+    fc7_feats = hkl.load(os.path.join(features_path, 'test_fc7_feats.hkl'))
+    pool5_feats = hkl.load(os.path.join(features_path, 'test_pool5_feats.hkl'))
+    props = pickle.load(open(os.path.join(features_path, 'test_props.p'), "rb"))
+    comp_fc7 = hkl.load(os.path.join(features_path, 'test_comp_fc7.hkl'))
+
+    # for now, normalize the pool5_feats making comparison easier
+    # still want to hold on to original pool5_feats though
+    for i, feat in enumerate(pool5_feats):
+        pool5_feats[i, :] = feat / feat.max()
+
+    print 'Load Time Feat DB (s) : ', time.clock() - start_time
+    print '%s Instances in DB' % len(props)
+
+    return comp_fc7, props, fc7_feats, pool5_feats
+
 
 def dump_feature_stats(class_gmms):
     file_name = 'class_gmms.p'
     file_path = os.path.join(db_dir, 'stats', file_name)
     print 'Saving : ', file_path
-    pickle.dump(class_gmms, open( file_path, "wb" ))
+    pickle.dump(class_gmms, open(file_path, "wb"))
+
 
 def load_feature_stats():
     """
@@ -280,21 +352,33 @@ def load_feature_stats():
     """
     start_time = time.clock()
     file_path = os.path.join(db_dir, 'stats', 'class_gmms.p')
-    class_gmms = pickle.load(open(file_path, "rb" ))
-
+    class_gmms = pickle.load(open(file_path, "rb"))
 
     print 'Load Time Stats DB (s) : ', time.clock() - start_time
     return class_gmms
 
 
 def save_image(np_img, inst, type):
-    file_path = os.path.join(db_dir,type, 'img_%s.jpeg' % (inst))
+    file_path = os.path.join(db_dir, type, 'img_%s.jpeg' % (inst))
     im = Image.fromarray(np_img)
     im.save(file_path)
 
+
 def load_image(inst, type):
-    file_path = os.path.join(db_dir,type, 'img_%s.jpeg' % (inst))
+    file_path = os.path.join(db_dir, type, 'img_%s.jpeg' % (inst))
     return np.asarray(Image.open(file_path), dtype=np.uint8)
+
+
+def save_test_image(np_img, inst, type):
+    file_path = os.path.join(test_set_dir, type, 'img_%s.jpeg' % (inst))
+    im = Image.fromarray(np_img)
+    im.save(file_path)
+
+
+def load_test_image(inst, type):
+    file_path = os.path.join(test_set_dir, type, 'img_%s.jpeg' % (inst))
+    return np.asarray(Image.open(file_path), dtype=np.uint8)
+
 
 def trans_img_dcnn(img, box):
     """
@@ -305,51 +389,17 @@ def trans_img_dcnn(img, box):
 
     :return: dcnn_img
     """
-    # x1, y1, x2, y2, mean_depth = box
-    #
-    # mean_x = int((x2 + x1) / 2.0)
-    # mean_y = int((y2 + y1) / 2.0 )
-    #
-    # size = 400
-    # half_size = size / 2
-    #
-    # # its okay to have negatives since these  should wrap around to 0's
-    # if mean_x + half_size >= img.shape[0]:
-    #     x_max = img.shape[0]-1
-    #     x_min = x_max - size
-    # elif mean_x - half_size < 0:
-    #     x_min = 0
-    #     x_max = size
-    # else:
-    #     x_min = mean_x - half_size
-    #     x_max = x_min + size
-    #
-    # if mean_y + half_size >= img.shape[1]:
-    #     y_max = img.shape[1]-1
-    #     y_min = y_max - size
-    # elif mean_y - half_size < 0:
-    #     y_min = 0
-    #     y_max = size
-    # else:
-    #     y_min = mean_y - half_size
-    #     y_max = y_min + size
-    #
-    # print x_min, x_max, y_min, y_max
-    #
-    # resized_img = cv2.resize(img[x_min:x_max, y_min:y_max, :], (256, 256))
-    #
-    # return np.asarray(resized_img, dtype=np.float32) / 255.0
-
     x1, y1, x2, y2, mean_depth = box
 
     x1 = max(0, x1)
     y1 = max(0, y1)
-    x2 = min(img.shape[0]-1, x2)
-    y2 = min(img.shape[1] -1, y2)
+    x2 = min(img.shape[0] - 1, x2)
+    y2 = min(img.shape[1] - 1, y2)
 
     resized_img = cv2.resize(img[x1:x2, y1:y2, :], (256, 256))
 
     return np.asarray(resized_img, dtype=np.float32) / 255.0
+
 
 def query_accept():
     var = raw_input("Accept Photo (y/n) ? : ")
@@ -358,10 +408,11 @@ def query_accept():
     else:
         return -1
 
-def query_class():
+
+def query_id(type):
     while True:
         try:
-            var = raw_input("Enter class ID (uint) : ")
+            var = raw_input("Enter %s ID (uint) : ", type)
             id = int(var)
             break
         except:
@@ -369,7 +420,6 @@ def query_class():
             continue
 
     return id
-
 
 
 def crop_segment(segmenter):
@@ -393,14 +443,15 @@ def crop_segment(segmenter):
     x1, y1, x2, y2, mean_depth = boxes[closest_idx]
 
     x1 = max(0, x1)
-    y1 = max(0,y1)
-    x2 = min(x2, img.shape[0]-1)
-    y2 = min(y2, img.shape[1]-1)
+    y1 = max(0, y1)
+    x2 = min(x2, img.shape[0] - 1)
+    y2 = min(y2, img.shape[1] - 1)
 
     cropped_img = np.zeros(img.shape, dtype=img.dtype)
     cropped_img[x1:x2, y1:y2, :] = img[x1:x2, y1:y2, :]
 
-    return  cropped_img, boxes[closest_idx]
+    return cropped_img, boxes[closest_idx]
+
 
 def query_should_continue():
     should_continue = raw_input("Continue (y/n) ? : ")

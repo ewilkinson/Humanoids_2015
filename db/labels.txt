@@ -1,3 +1,4 @@
+-1 unknown
 0 recyle_bin
 1 pitcher
 2 trash_bin
@@ -13,8 +14,8 @@
 12 legos
 13 chair_blue
 14 green_ball
-15 desktop
+15 computer
 16 fire_extinguisher
-17 thrower
-18 jigsaw_drill
+17 toy_thrower
+18 jigsaw
 19 pillow

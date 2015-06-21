@@ -9,19 +9,25 @@ import matplotlib.pyplot as plt
 from matplotlib import offsetbox
 
 
-comp_fc7, ids, fc7_feats, pool5_feats = utils.load_feature_db()
-classes = np.unique(ids)
+comp_fc7, props, fc7_feats, pool5_feats = utils.load_feature_db()
+class_labels = np.zeros(shape=(len(props),), dtype=np.int32)
+aspect_labels = np.zeros(shape=(len(props),), dtype=np.int32)
+for i in range(len(props)):
+    class_labels[i] = props[i]['type_id']
+    aspect_labels[i] = props[i]['aspect_id']
+
+classes = np.unique(class_labels)
 
 # this is only to display the class ID
 from sklearn import datasets
-digits = datasets.load_digits(n_class=classes.shape[0])
 
+digits = datasets.load_digits(n_class=classes.shape[0])
 labels = utils.load_db_labels()
 
 
-#----------------------------------------------------------------------
+# ----------------------------------------------------------------------
 # Scale and visualize the embedding vectors
-def plot_embedding(X, with_labels=True,   title=None):
+def plot_embedding(X, with_labels=True, title=None):
     x_min, x_max = np.min(X, 0), np.max(X, 0)
     X = (X - x_min) / (x_max - x_min)
 
@@ -30,19 +36,19 @@ def plot_embedding(X, with_labels=True,   title=None):
     for i in range(X.shape[0]):
         if with_labels is None:
             plt.scatter(X[i, 0], X[i, 1],
-                        color=plt.cm.Set1(ids[i]*1.0 / len(classes)),
-                        s = 32)
+                        color=plt.cm.Set1(class_labels[i] * 1.0 / len(classes)),
+                        s=32)
             continue
 
         elif not with_labels:
-            plt.text(X[i, 0], X[i, 1], str(ids[i]),
-                     color=plt.cm.Set1(ids[i]*1.0 / len(classes)),
+            plt.text(X[i, 0], X[i, 1], str(class_labels[i]),
+                     color=plt.cm.Set1(class_labels[i] * 1.0 / len(classes)),
                      fontdict={'weight': 'bold', 'size': 30})
 
         elif with_labels:
-            plt.text(X[i, 0], X[i, 1], labels[ids[i]],
-                 color=plt.cm.Set1(ids[i]*1.0 / len(classes)),
-                 fontdict={'weight': 'bold', 'size': 9})
+            plt.text(X[i, 0], X[i, 1], labels[class_labels[i]],
+                     color=plt.cm.Set1(class_labels[i] * 1.0 / len(classes)),
+                     fontdict={'weight': 'bold', 'size': 9})
 
     plt.xticks([]), plt.yticks([])
     plt.ylim([-0.1, 1.1])
@@ -64,9 +70,6 @@ n_neighbors = 3
 # embed_X = model.fit_transform(comp_fc7)
 
 model = lda.LDA(n_components=2)
-embed_X = model.fit_transform(comp_fc7, ids)
+embed_X = model.fit_transform(comp_fc7, class_labels)
 
-
-
-
-plot_embedding(embed_X, with_labels=None, title= '')
+plot_embedding(embed_X, with_labels=False, title='')

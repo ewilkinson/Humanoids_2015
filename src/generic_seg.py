@@ -18,8 +18,10 @@ import time
 
 from scipy import ndimage
 
+
 class GenericSegmenter:
-    def __init__(self, cluster_type="dbscan", use_gray=True, depth_max_threshold=4000, show_segmentation=False, show_cluster=False, show_mask=False, merge_boxes=False):
+    def __init__(self, cluster_type="dbscan", use_gray=True, depth_max_threshold=4000, show_segmentation=False,
+                 show_cluster=False, show_mask=False, merge_boxes=False):
         self.cluster_type = cluster_type
         self.use_gray = use_gray
 
@@ -36,7 +38,6 @@ class GenericSegmenter:
             cv2.namedWindow("Mask window", 1)
         if show_cluster:
             cv2.namedWindow("Cluster window", 1)
-
 
         self.gmm = mixture.GMM(n_components=1, covariance_type='full')
 
@@ -242,7 +243,6 @@ class GenericSegmenter:
                 if class_feats.shape[0] < 20:
                     continue
 
-
                 self.gmm.fit(class_feats)
                 covars = np.sqrt(np.asarray(self.gmm._get_covars()))
 
@@ -259,23 +259,26 @@ class GenericSegmenter:
                 boxes.append([x1, y1, x2, y2, mean_depth])
 
                 if self.show_cluster:
-                    exp=5
+                    exp = 5
                     rc = self.rand_color()
                     rc2 = self.rand_color()
                     rc3 = self.rand_color()
                     # c = self.gmm.means_[0, 3] * 255
                     for i in range(class_feats.shape[0]):
-                        x, y = int(class_feats[i,0]*x_size), int(class_feats[i,1]*y_size)
-                        cluster_image[max(x- exp,0):min(x+exp, cluster_image.shape[0]),max(y- exp,0):min(y+exp,cluster_image.shape[1]), 0] = rc3
-                        cluster_image[max(x- exp,0):min(x+exp, cluster_image.shape[0]),max(y- exp,0):min(y+exp,cluster_image.shape[1]), 1] = rc2
-                        cluster_image[max(x- exp,0):min(x+exp, cluster_image.shape[0]),max(y- exp,0):min(y+exp,cluster_image.shape[1]), 2] = rc
+                        x, y = int(class_feats[i, 0] * x_size), int(class_feats[i, 1] * y_size)
+                        cluster_image[max(x - exp, 0):min(x + exp, cluster_image.shape[0]),
+                        max(y - exp, 0):min(y + exp, cluster_image.shape[1]), 0] = rc3
+                        cluster_image[max(x - exp, 0):min(x + exp, cluster_image.shape[0]),
+                        max(y - exp, 0):min(y + exp, cluster_image.shape[1]), 1] = rc2
+                        cluster_image[max(x - exp, 0):min(x + exp, cluster_image.shape[0]),
+                        max(y - exp, 0):min(y + exp, cluster_image.shape[1]), 2] = rc
 
             if self.merge_boxes:
                 boxes = self._merge_boxes_gmm(boxes)
 
             if self.show_segmentation:
                 for x1, y1, x2, y2, mean_depth in boxes:
-                    cv2.rectangle(cv_image, (y1, x1), (y2, x2), (125,0,0), 2)
+                    cv2.rectangle(cv_image, (y1, x1), (y2, x2), (125, 0, 0), 2)
 
             self.boxes = boxes
 
@@ -289,7 +292,7 @@ class GenericSegmenter:
             cv2.waitKey(1)
         #
         # for j in range(cv_image.shape[2]):
-        #     cv_image[:,:,j] = cv_image[:,:,j] * self.depth_mask
+        # cv_image[:,:,j] = cv_image[:,:,j] * self.depth_mask
 
         if self.show_segmentation:
             cv2.imshow("Image window", cv_image)
@@ -309,12 +312,12 @@ class GenericSegmenter:
 
 if __name__ == '__main__':
     segmenter = GenericSegmenter(cluster_type="dbscan",
-                            use_gray=False,
-                            depth_max_threshold=4000,
-                            show_segmentation=True,
-                            show_cluster=True,
-                            show_mask=True,
-                            merge_boxes=True)
+                                 use_gray=False,
+                                 depth_max_threshold=4000,
+                                 show_segmentation=True,
+                                 show_cluster=True,
+                                 show_mask=True,
+                                 merge_boxes=True)
 
     try:
         segmenter.listen()

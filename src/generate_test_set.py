@@ -14,8 +14,8 @@ if __name__ == '__main__':
     net, params, blobs = utils.load_network()
 
     fc7_compressor = utils.load_compressor(layer='fc7',
-                                               dimension=128,
-                                               compression='pca')
+                                           dimension=128,
+                                           compression='pca')
 
     fc7_scalar = utils.load_scalar(layer='fc7')
     pool5_scalar = utils.load_scalar(layer='pool5')
@@ -25,29 +25,23 @@ if __name__ == '__main__':
     cv2.namedWindow("DCNN Window", 1)
 
     segmenter = GenericSegmenter(cluster_type="dbscan",
-                            use_gray=False,
-                            depth_max_threshold=4000,
-                            show_segmentation=False,
-                            show_cluster=False,
-                            show_mask=False,
-                            merge_boxes=True)
+                                 use_gray=False,
+                                 depth_max_threshold=4000,
+                                 show_segmentation=False,
+                                 show_cluster=False,
+                                 show_mask=False,
+                                 merge_boxes=True)
 
-    comp_fc7, props, fc7_feats, pool5_feats = utils.load_feature_db()
-
-    class_labels = np.zeros(shape=(len(props),), dtype=np.int32)
-    aspect_labels = np.zeros(shape=(len(props),), dtype=np.int32)
-    for i in range(len(props)):
-        class_labels[i] = props[i]['type_id']
-        aspect_labels[i] = props[i]['aspect_id']
+    comp_fc7, props, fc7_feats, pool5_feats = utils.load_test_set_db()
 
     try:
         segmenter.listen()
 
         type_id = utils.query_id('TYPE')
         object_id = utils.query_id('OBJECT')
-
         print 'Type ID : ', type_id
         print 'Object ID : ', object_id
+        count = 1
 
         while True:
             time.sleep(1)
@@ -56,22 +50,17 @@ if __name__ == '__main__':
             if segmenter.rgb_imge is None or segmenter.boxes is None:
                 continue
 
-            cropped_img, box = utils.crop_segment(segmenter)
-            cv2.imshow("Query Window", cropped_img)
-            cv2.waitKey(1)
+            rotation = np.random.randint(0, 360)
+            print 'Scan count : ', count
+            print 'Please set to degree : ', rotation
 
-            if utils.query_accept() == -1:
-                continue
-
-            prop = {}
-            prop['type_id'] = type_id
-            prop['object_id'] = object_id
-
-            aspect_id = utils.query_id('ASPECT')
-            rotation = utils.query_id('ROTATION')
-            prop['aspect_id'] = aspect_id
-            prop['rotation'] = rotation
-
+            while True:
+                cropped_img, box = utils.crop_segment(segmenter)
+                cv2.imshow("Query Window", cropped_img)
+                cv2.waitKey(1)
+                if utils.query_accept() == 1:
+                    aspect_id = utils.query_id('ASPECT')
+                    break
 
             dcnn_img = utils.trans_img_dcnn(cropped_img, box)
             cv2.imshow("DCNN Window", dcnn_img)
@@ -91,19 +80,27 @@ if __name__ == '__main__':
             # assign a unique ID and save image
             unique_id = len(props)
 
-            class_labels = np.append(class_labels, type_id)
+
+            # append the id list with the latest class id
+            prop = {'type_id': type_id,
+                    'rotation': rotation,
+                    'object_id': object_id,
+                    'aspect_id': aspect_id}
+
             props.append(prop)
 
             # we have to dump each time otherwise images and indicies might get out of sync
             # say, if the program terminated but had already saved out images
-            utils.save_image(segmenter.rgb_imge, unique_id, 'images')
-            utils.save_image(np.asarray(dcnn_img*255,dtype=np.uint8), unique_id, 'seg_images')
-            utils.dump_feature_db(comp_fc7, props, fc7_feats, pool5_feats)
+            utils.save_test_image(segmenter.rgb_imge, unique_id, 'images')
+            utils.save_test_image(np.asarray(dcnn_img * 255, dtype=np.uint8), unique_id, 'seg_images')
+            utils.dump_test_set_db(comp_fc7, props, fc7_feats, pool5_feats)
 
             time.sleep(1)
 
             if utils.query_should_continue() == -1:
                 break
+
+            count += 1
 
 
     except KeyboardInterrupt:
