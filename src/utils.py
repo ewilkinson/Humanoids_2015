@@ -412,7 +412,7 @@ def query_accept():
 def query_id(type):
     while True:
         try:
-            var = raw_input("Enter %s ID (uint) : ", type)
+            var = raw_input("Enter %s ID (uint) : " % type)
             id = int(var)
             break
         except:

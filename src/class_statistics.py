@@ -3,8 +3,13 @@ import utils
 from sklearn import mixture
 import hickle as hkl
 
-comp_fc7, class_labels, fc7_feats, pool5_feats = utils.load_feature_db()
+comp_fc7, props, fc7_feats, pool5_feats = utils.load_feature_db()
 
+class_labels = np.zeros(shape=(len(props),), dtype=np.int32)
+aspect_labels = np.zeros(shape=(len(props),), dtype=np.int32)
+for i in range(len(props)):
+    class_labels[i] = props[i]['type_id']
+    aspect_labels[i] = props[i]['aspect_id']
 unique_classes = np.unique(class_labels)
 gmms = {}
 for k in unique_classes:
@@ -16,7 +21,7 @@ for k in unique_classes:
     gmm.fit(X)
     gmms[k] = gmm
 
-# utils.dump_feature_stats(gmms)
+utils.dump_feature_stats(gmms)
 
 
 
@@ -36,10 +41,11 @@ for i in range(num_classes):
 import matplotlib.pyplot as plt
 import matplotlib
 
-matplotlib.rcParams.update({'font.size': 22})
+
 plt.figure()
-plt.imshow(divergence_matrix, interpolation='none', cmap=plt.cm.get_cmap('Blues'))
+plt.imshow(divergence_matrix, interpolation='none', cmap=plt.cm.get_cmap('jet'))
 plt.xlabel('Type Gaussian Model')
 plt.ylabel('Type Gaussian Model')
 plt.colorbar()
+matplotlib.rcParams.update({'font.size': 22})
 
